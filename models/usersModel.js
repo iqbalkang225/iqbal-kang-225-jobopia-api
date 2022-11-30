@@ -39,7 +39,10 @@ usersSchema.pre('save', async function(next) {
 })
 
 usersSchema.methods.createJWT = function() {
-  return jwt.sign( {name: this.name, userId: this._id}, 'wdasfsdfdsfdsfdsfdsf', { expiresIn: '30d' } )
+  return jwt.sign( 
+    {name: this.name, userId: this._id}, 
+    process.env.JWT_SECRET, 
+    { expiresIn: process.env.JWT_EXPIRES_IN } )
 }
 
 usersSchema.methods.comparePasswords = async function(enteredPassword) {
