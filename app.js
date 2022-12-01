@@ -1,5 +1,6 @@
 const express = require('express')
 const {StatusCodes} = require('http-status-codes')
+const cors = require('cors')
 
 const usersRouter = require('./routes/usersRouter')
 const jobsRouter = require('./routes/jobRouter')
