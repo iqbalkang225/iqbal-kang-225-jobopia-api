@@ -11,6 +11,7 @@ const isAuthenticated = require('./utils/isAuthenticated')
 const app = express()
 
 app.use(express.json())
+app.use(cors())
 
 // routes middlewares
 app.use('/api/v1/jobs', isAuthenticated, jobsRouter)
