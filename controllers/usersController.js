@@ -4,7 +4,7 @@ const AppError = require("../utils/appError")
 const catchAsyncErrors = require("../utils/catchAsyncErrors")
 
 const postRegister = catchAsyncErrors( async (req, res, next) => {
-
+  console.log(req.body)
   const user = await User.create(req.body)
   const {name, _id: userId} = user
 
@@ -33,7 +33,7 @@ const postLogin = catchAsyncErrors( async(req, res, next) => {
   res.status(StatusCodes.OK).json({
     status: 'success',
     data: { 
-      user: user.name,
+      name: user.name,
       token
      }
   })
