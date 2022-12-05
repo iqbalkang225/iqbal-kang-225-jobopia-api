@@ -2,10 +2,26 @@ const catchAsyncErrors = require('../utils/catchAsyncErrors')
 const appError = require('../utils/appError')
 const Job = require('../models/jobsModel')
 const { StatusCodes } = require('http-status-codes')
+const queriesClass = require('../utils/queriesClass')
 
 const getJobs = catchAsyncErrors( async (req, res, next) => {
+  // const { status, jobType, sort, search } = req.query
+
   const signedInUser = req.user._id
-  const jobs =  await Job.find({createdBy: signedInUser}).sort('-createdAt')
+
+  req.query.signedInUser = signedInUser
+
+  const queries = new queriesClass(req.query)
+                      .findAllJobs()
+                      .filterByPosition()
+                      .filterByStatus()
+                      .filterByjobType()
+
+
+  const jobs = await Job.find(queries.queryObject)
+  console.log(jobs)
+
+  // const jobs =  await Job.find({createdBy: signedInUser}).sort('-createdAt')
 
   res.status(StatusCodes.OK).json({
     status: 'success',
@@ -31,12 +47,14 @@ const postJob = catchAsyncErrors( async (req, res, next) => {
 
 const updateJob = catchAsyncErrors( async(req, res, next) => {
 
+
   const { position, company } = req.body
   const jobId = req.params.id
 
   if(!position && !company) return next(new appError('Missing fields', StatusCodes.BAD_REQUEST))
 
   const job = await Job.findOneAndUpdate({_id: jobId}, req.body, {new: true, runValidators: true})
+  console.log(job)
 
   res.status(StatusCodes.OK).json({
     status: 'success',
