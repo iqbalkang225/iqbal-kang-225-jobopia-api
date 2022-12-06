@@ -31,6 +31,17 @@ class queriesClass {
     return this
   }
 
+  sort() {
+
+    if(this.query.sort === 'latest') this.queryObject = Job.find().sort('-createdAt')
+    if(this.query.sort === 'oldest') this.queryObject = Job.find().sort('createdAt')
+    if(this.query.sort === 'a-z') this.queryObject = Job.find().sort('position')
+    if(this.query.sort === 'z-a') this.queryObject = Job.find().sort('-position')
+  
+    return this
+    
+  }
+
 }
 
 module.exports = queriesClass

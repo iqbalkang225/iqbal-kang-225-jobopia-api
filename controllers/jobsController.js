@@ -3,12 +3,11 @@ const appError = require('../utils/appError')
 const Job = require('../models/jobsModel')
 const { StatusCodes } = require('http-status-codes')
 const queriesClass = require('../utils/queriesClass')
+const { default: mongoose } = require('mongoose')
 
 const getJobs = catchAsyncErrors( async (req, res, next) => {
-  // const { status, jobType, sort, search } = req.query
 
   const signedInUser = req.user._id
-
   req.query.signedInUser = signedInUser
 
   const queries = new queriesClass(req.query)
@@ -16,19 +15,15 @@ const getJobs = catchAsyncErrors( async (req, res, next) => {
                       .filterByPosition()
                       .filterByStatus()
                       .filterByjobType()
+                      .sort()
 
 
   const jobs = await Job.find(queries.queryObject)
-  console.log(jobs)
-
-  // const jobs =  await Job.find({createdBy: signedInUser}).sort('-createdAt')
 
   res.status(StatusCodes.OK).json({
     status: 'success',
     results: jobs.length,
-    data: {
-      jobs
-    }
+    data: { jobs }
   })
 })
 
@@ -74,9 +69,52 @@ const deleteJob = catchAsyncErrors( async(req, res, next) => {
   })
 })
 
+const getStats = catchAsyncErrors( async(req, res, next) => {
+  const signedInUser = req.user._id
+
+  let stats = await Job.aggregate([
+    {
+      $match: {createdBy: mongoose.Types.ObjectId(signedInUser)}
+    },
+    {
+      $group: { _id: '$status', count: {$sum : 1} }
+    }
+  ])
+
+  stats = stats.reduce((acc, curr) => {
+    const {_id, count} = curr
+    acc[_id] = count
+    return acc
+  }, {})
+
+  let monthlyApplications = await Job.aggregate([
+    {
+      $match: {createdBy: mongoose.Types.ObjectId(signedInUser)}
+    },
+    {
+      $group: {
+        _id: { year: {$year: '$createdAt'}, month: {$month: '$createdAt'} },
+        count: { $sum: 1 }
+      }
+    },
+    { $sort: {'_id.year': -1, '_id.month': -1} },
+    { $limit: 6 }
+  ])
+
+
+  res.status(StatusCodes.OK).json({
+    status: 'success',
+    results: stats.length,
+    data: { stats }
+  })
+
+  
+})
+
 module.exports = {
   getJobs,
   postJob,
   updateJob,
-  deleteJob
+  deleteJob,
+  getStats
 }
